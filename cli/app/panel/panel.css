@@ -289,6 +289,15 @@
 	.chat-send-btn:focus {
 		outline: 3px solid white;
 	}
+
+	.reset-chat-btn {
+		border: 2px solid white;
+	}
+
+	.reset-chat-btn:focus {
+		outline: 3px solid yellow;
+		outline-offset: 2px;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -558,6 +567,9 @@
 .chat-header-content {
 	max-width: 1200px;
 	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .chat-assistant-info {
@@ -609,6 +621,33 @@
 	50% {
 		opacity: 0.5;
 	}
+}
+
+/* Reset Chat Button */
+.reset-chat-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	color: white;
+	font-size: 1.125rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+}
+
+.reset-chat-btn:hover {
+	background: rgba(255, 255, 255, 0.25);
+	border-color: rgba(255, 255, 255, 0.4);
+}
+
+.reset-chat-btn:focus {
+	outline: 2px solid white;
+	outline-offset: 2px;
 }
 
 /* Chat Messages */
@@ -903,6 +942,12 @@
 		padding: 1rem 1.5rem;
 	}
 
+	.reset-chat-btn {
+		width: 36px;
+		height: 36px;
+		font-size: 1rem;
+	}
+
 	.chat-messages {
 		padding: 1rem;
 	}
@@ -1007,6 +1052,13 @@
 
 	.chat-assistant-status {
 		font-size: 0.813rem;
+	}
+
+	.reset-chat-btn {
+		width: 34px;
+		height: 34px;
+		font-size: 0.938rem;
+		border-radius: 6px;
 	}
 
 	.chat-messages {

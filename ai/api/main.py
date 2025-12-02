@@ -1,6 +1,5 @@
 # api/main.py
 from pathlib import Path
-import os
 import sys
 
 from fastapi import FastAPI, HTTPException, Query
@@ -13,7 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
 
-MODEL_PATH = ROOT / "models" / "llama3-8b-instruct-Q5_K_M.gguf"
+MODEL_PATH = ROOT / "models" / "Meta-Llama-3-8B-Instruct.Q5_K_M.gguf"
 
 
 # ----- Importa clasificador y coach (con memoria) -----
@@ -28,11 +27,12 @@ app = FastAPI(title="Emotion Classifier + Coach API", version="3.1.0")
 # CORS abierto para desarrollo (ajusta en producción)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],     # <- especifica tu dominio en prod
+    allow_origins=["*"],  # <- especifica tu dominio en prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ================================
 # Esquemas Pydantic
@@ -41,19 +41,23 @@ class PredictIn(BaseModel):
     text: str
     top_k: int | None = 3
 
+
 class PredictOut(BaseModel):
     label: str
     probability: float
     top_k: list
 
+
 class CoachIn(BaseModel):
     text: str
     session_id: str | None = "default"  # permite hilos de conversación
+
 
 class CoachOut(BaseModel):
     emotion: str
     advice: str
     session_id: str
+
 
 # ================================
 # Eventos de ciclo de vida
@@ -72,11 +76,11 @@ def _startup() -> None:
 
     # 2) Inicializar Llama incrustado (llama-cpp-python)
     # Ruta por variable de entorno o por defecto en carpeta models/
-    '''
+    """
     default_model_path = (ROOT / "models" / "llama3-8b-instruct-Q5_K_M.gguf")
     env_path = os.getenv("LLAMA_MODEL_PATH")  # str | None
     model_path = env_path if env_path else str(default_model_path)
-    '''
+    """
     model_path = str(MODEL_PATH)
 
     # Ajustes de rendimiento: GPU parcial + 3 hilos
@@ -84,13 +88,14 @@ def _startup() -> None:
         init_llama(
             model_path=model_path,  # str (no Path)
             n_ctx=4096,
-            n_threads=3,       # usa 3 núcleos; puedes probar 4–6
-            n_gpu_layers=12,   # mueve ~20 capas a la GPU (ajusta según VRAM)
+            n_threads=3,  # usa 3 núcleos; puedes probar 4–6
+            n_gpu_layers=12,  # mueve ~20 capas a la GPU (ajusta según VRAM)
             verbose=False,
         )
         print(f"[OK] Llama inicializado con: {model_path}")
     except Exception as e:
         print(f"[AVISO] No se pudo inicializar Llama: {e}")
+
 
 # ================================
 # Rutas
@@ -98,6 +103,7 @@ def _startup() -> None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 @app.post("/predict", response_model=PredictOut)
 def predict(payload: PredictIn):
@@ -115,6 +121,7 @@ def predict(payload: PredictIn):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al predecir: {e}")
 
+
 @app.post("/coach", response_model=CoachOut)
 def coach(payload: CoachIn):
     """
@@ -130,7 +137,9 @@ def coach(payload: CoachIn):
     try:
         emo = predict_emotion(text, top_k=1)["label"]
     except FileNotFoundError as e:
-        raise HTTPException(status_code=500, detail=f"Modelo de emociones no disponible: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Modelo de emociones no disponible: {e}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error detectando emoción: {e}")
 
@@ -138,10 +147,15 @@ def coach(payload: CoachIn):
         reply = coach_reply_llamacpp(text, emo, session_id=session_id)
         return {"emotion": emo, "advice": reply, "session_id": session_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generando respuesta del coach: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generando respuesta del coach: {e}"
+        )
+
 
 @app.delete("/coach/session")
-def coach_reset_session(session_id: str = Query("default", description="ID de la sesión a limpiar")):
+def coach_reset_session(
+    session_id: str = Query("default", description="ID de la sesión a limpiar"),
+):
     """
     Limpia el historial de conversación de una sesión (reinicia la memoria).
     """
@@ -149,4 +163,6 @@ def coach_reset_session(session_id: str = Query("default", description="ID de la
         reset_session(session_id)
         return {"status": "ok", "message": f"Sesión '{session_id}' reiniciada."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"No se pudo reiniciar la sesión: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"No se pudo reiniciar la sesión: {e}"
+        )

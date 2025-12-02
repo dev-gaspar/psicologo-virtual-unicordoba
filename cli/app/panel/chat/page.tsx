@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import {
+	sendChatMessage,
+	checkAIHealth,
+	resetChatSession,
+} from "@/lib/chatService";
+import Swal from "sweetalert2";
 
 interface Message {
 	id: number;
 	text: string;
 	sender: "user" | "assistant";
 	timestamp: string;
+	emotion?: string;
 }
 
 export default function ChatPage() {
@@ -23,16 +30,10 @@ export default function ChatPage() {
 	]);
 	const [inputValue, setInputValue] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
+	const [isAIConnected, setIsAIConnected] = useState(false);
+	const [sessionId] = useState(() => `session-${Date.now()}`);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
-
-	// Mock responses para demostración
-	const mockResponses = [
-		"Entiendo cómo te sientes. Es completamente normal sentirse así en momentos difíciles. ¿Podrías contarme más sobre lo que está pasando?",
-		"Gracias por compartir eso conmigo. Tu bienestar emocional es importante. ¿Has considerado hablar con alguien sobre esto?",
-		"Es valiente de tu parte buscar ayuda. Estoy aquí para apoyarte. ¿Qué te gustaría explorar más a fondo?",
-		"Comprendo. A veces expresar nuestros sentimientos puede ser el primer paso hacia sentirnos mejor. ¿Hay algo específico que te preocupe en este momento?",
-	];
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,14 +43,33 @@ export default function ChatPage() {
 		scrollToBottom();
 	}, [messages]);
 
-	const handleSendMessage = (e: React.FormEvent) => {
+	// Verificar conexión con el servidor de AI al cargar
+	useEffect(() => {
+		const checkConnection = async () => {
+			const isHealthy = await checkAIHealth();
+			setIsAIConnected(isHealthy);
+			if (!isHealthy) {
+				Swal.fire({
+					icon: "warning",
+					title: "Servidor de AI desconectado",
+					text: "El servicio de inteligencia artificial no está disponible. Por favor, verifica que esté ejecutándose.",
+					confirmButtonColor: "#3085d6",
+				});
+			}
+		};
+		checkConnection();
+	}, []);
+
+	const handleSendMessage = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (inputValue.trim() === "") return;
+
+		const messageText = inputValue.trim();
 
 		// Agregar mensaje del usuario
 		const userMessage: Message = {
 			id: messages.length + 1,
-			text: inputValue,
+			text: messageText,
 			sender: "user",
 			timestamp: new Date().toLocaleTimeString("es-CO", {
 				hour: "2-digit",
@@ -61,22 +81,85 @@ export default function ChatPage() {
 		setInputValue("");
 		setIsTyping(true);
 
-		// Simular respuesta del asistente (mockup)
-		setTimeout(() => {
-			const randomResponse =
-				mockResponses[Math.floor(Math.random() * mockResponses.length)];
+		try {
+			// Enviar mensaje al AI backend
+			const response = await sendChatMessage(messageText, sessionId);
+
+			// Agregar respuesta del asistente
 			const assistantMessage: Message = {
 				id: messages.length + 2,
-				text: randomResponse,
+				text: response.advice,
 				sender: "assistant",
 				timestamp: new Date().toLocaleTimeString("es-CO", {
 					hour: "2-digit",
 					minute: "2-digit",
 				}),
+				emotion: response.emotion,
 			};
+
 			setMessages((prev) => [...prev, assistantMessage]);
+			setIsAIConnected(true);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Error desconocido";
+
+			Swal.fire({
+				icon: "error",
+				title: "Error al enviar mensaje",
+				text: errorMessage,
+				confirmButtonColor: "#3085d6",
+			});
+
+			setIsAIConnected(false);
+		} finally {
 			setIsTyping(false);
-		}, 1500);
+		}
+	};
+
+	const handleResetSession = async () => {
+		const result = await Swal.fire({
+			icon: "question",
+			title: "Reiniciar conversación",
+			text: "¿Estás seguro de que deseas reiniciar la conversación? Se perderá todo el historial.",
+			showCancelButton: true,
+			confirmButtonText: "Sí, reiniciar",
+			cancelButtonText: "Cancelar",
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+		});
+
+		if (result.isConfirmed) {
+			try {
+				await resetChatSession(sessionId);
+				setMessages([
+					{
+						id: 1,
+						text: "Hola, soy tu asistente psicológico virtual de la Universidad de Córdoba. Estoy aquí para escucharte y apoyarte. ¿Cómo te sientes hoy?",
+						sender: "assistant",
+						timestamp: new Date().toLocaleTimeString("es-CO", {
+							hour: "2-digit",
+							minute: "2-digit",
+						}),
+					},
+				]);
+				Swal.fire({
+					icon: "success",
+					title: "Conversación reiniciada",
+					text: "La conversación ha sido reiniciada exitosamente.",
+					confirmButtonColor: "#3085d6",
+					timer: 2000,
+				});
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Error desconocido";
+				Swal.fire({
+					icon: "error",
+					title: "Error",
+					text: errorMessage,
+					confirmButtonColor: "#3085d6",
+				});
+			}
+		}
 	};
 
 	return (
@@ -91,11 +174,26 @@ export default function ChatPage() {
 						<div>
 							<h1 className="chat-assistant-name">Asistente Psicológico</h1>
 							<p className="chat-assistant-status">
-								<span className="status-indicator" aria-label="En línea" />
-								Siempre disponible para ti
+								<span
+									className="status-indicator"
+									aria-label={isAIConnected ? "En línea" : "Desconectado"}
+									style={{
+										backgroundColor: isAIConnected ? "#10b981" : "#ef4444",
+									}}
+								/>
+								{isAIConnected ? "Conectado" : "Desconectado"}
 							</p>
 						</div>
 					</div>
+					<button
+						type="button"
+						onClick={handleResetSession}
+						className="reset-chat-btn"
+						aria-label="Reiniciar conversación"
+						title="Reiniciar conversación"
+					>
+						<i className="fas fa-redo" aria-hidden="true" />
+					</button>
 				</div>
 			</header>
 
@@ -194,6 +292,14 @@ export default function ChatPage() {
 						<i className="fas fa-paper-plane" aria-hidden="true" />
 					</button>
 				</form>
+				<div className="chat-disclaimer">
+					<i className="fas fa-info-circle" aria-hidden="true" />
+					<span>
+						{isTyping
+							? "El asistente está procesando tu mensaje. Esto puede tomar unos momentos..."
+							: "Este es un asistente de apoyo emocional. No sustituye atención profesional."}
+					</span>
+				</div>
 			</footer>
 		</div>
 	);
