@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		type: "website",
 		locale: "es_CO",
-		url: "https://psicologo-virtual.unicordoba.edu.co",
+		url: "https://psicologo-virtual.devgaspar.me",
 		siteName: "Psicólogo Virtual - Universidad de Córdoba",
 		title: "Psicólogo Virtual - Universidad de Córdoba",
 		description:
@@ -115,10 +115,7 @@ export default function RootLayout({
 				/>
 
 				{/* Canonical URL */}
-				<link
-					rel="canonical"
-					href="https://psicologo-virtual.unicordoba.edu.co"
-				/>
+				<link rel="canonical" href="https://psicologo-virtual.devgaspar.me" />
 
 				{/* JSON-LD Structured Data */}
 				<script
@@ -130,12 +127,12 @@ export default function RootLayout({
 							name: "Psicólogo Virtual - Universidad de Córdoba",
 							description:
 								"Plataforma de asistencia psicológica virtual 24/7 para la comunidad universitaria.",
-							url: "https://psicologo-virtual.unicordoba.edu.co",
+							url: "https://psicologo-virtual.devgaspar.me",
 							provider: {
 								"@type": "EducationalOrganization",
 								name: "Universidad de Córdoba",
 								url: "https://www.unicordoba.edu.co",
-								logo: "https://psicologo-virtual.unicordoba.edu.co/logo.png",
+								logo: "https://psicologo-virtual.devgaspar.me/logo.png",
 								address: {
 									"@type": "PostalAddress",
 									addressCountry: "CO",
@@ -152,7 +149,7 @@ export default function RootLayout({
 							inLanguage: "es-CO",
 							potentialAction: {
 								"@type": "RegisterAction",
-								target: "https://psicologo-virtual.unicordoba.edu.co/registro",
+								target: "https://psicologo-virtual.devgaspar.me/registro",
 							},
 						}),
 					}}
@@ -168,7 +165,7 @@ export default function RootLayout({
 							name: "Psicólogo Virtual Universidad de Córdoba",
 							description:
 								"Asistente psicológico virtual disponible 24/7 para apoyo emocional y bienestar estudiantil.",
-							url: "https://psicologo-virtual.unicordoba.edu.co",
+							url: "https://psicologo-virtual.devgaspar.me",
 							applicationCategory: "HealthApplication",
 							operatingSystem: "Web Browser",
 							offers: {
