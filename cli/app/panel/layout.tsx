@@ -39,7 +39,11 @@ export default function PanelLayout({
 	if (!user) {
 		return (
 			<div className="d-flex justify-content-center align-items-center min-vh-100">
-				<div className="spinner-border text-primary" role="status">
+				<div
+					className="spinner-border"
+					role="status"
+					style={{ color: "var(--primary-green)" }}
+				>
 					<span className="visually-hidden">Cargando...</span>
 				</div>
 			</div>

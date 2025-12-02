@@ -77,8 +77,8 @@ function VerifyCodePageContent() {
 
 	return (
 		<div className="container">
-			<div className="row justify-content-center align-items-center min-vh-100 py-4">
-				<div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+			<div className="row justify-content-center align-items-center min-vh-100 py-3 py-sm-4 py-md-5">
+				<div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
 					<div className="card shadow-lg border-0">
 						<div className="card-body p-4 p-md-5">
 							<div className="text-center mb-4">

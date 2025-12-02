@@ -137,18 +137,19 @@ function LoginPageContent() {
 
 			{/* Right Panel - Login Form */}
 			<div className="split-right">
-				<div className="split-content">
+				<div className="split-content px-3 px-sm-4 px-md-5 px-lg-4 px-xl-5 px-xxl-6">
 					{/* Logo mobile */}
 					<div className="text-center d-lg-none mb-4">
 						<i
-							className="fas fa-brain text-primary fs-1 mb-3"
+							className="fas fa-brain fs-1 mb-3"
 							aria-hidden="true"
+							style={{ color: "var(--primary-green)" }}
 						></i>
-						<h1 className="h4 text-primary fw-bold">Psicólogo Virtual</h1>
+						<h1 className="h4 fw-bold brand-text">Psicólogo Virtual</h1>
 					</div>
 
-					<div className="mb-4 mb-md-5">
-						<h2 className="brand-text mb-2 h3 h2-md">Iniciar Sesión</h2>
+					<div className="mb-3 mb-sm-4 mb-lg-5">
+						<h2 className="brand-text mb-2 h3">Iniciar Sesión</h2>
 						<p className="text-muted mb-0">
 							Ingresa tus credenciales para continuar
 						</p>
