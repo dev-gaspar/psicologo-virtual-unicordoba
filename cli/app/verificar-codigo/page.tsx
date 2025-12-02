@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import { showSuccess, showError } from "@/lib/notifications";
 import { verifyCodeSchema } from "@/lib/validationSchemas";
+import { RecaptchaProvider } from "../providers";
 
-export default function VerifyCodePage() {
+function VerifyCodePageContent() {
 	const [code, setCode] = useState("");
 	const [errors, setErrors] = useState<any>({});
 	const [loading, setLoading] = useState(false);
@@ -143,5 +144,13 @@ export default function VerifyCodePage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function VerifyCodePage() {
+	return (
+		<RecaptchaProvider>
+			<VerifyCodePageContent />
+		</RecaptchaProvider>
 	);
 }

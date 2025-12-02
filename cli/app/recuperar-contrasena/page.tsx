@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import { showSuccess, showError } from "@/lib/notifications";
 import { forgotPasswordSchema } from "@/lib/validationSchemas";
+import { RecaptchaProvider } from "../providers";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordPageContent() {
 	const [email, setEmail] = useState("");
 	const [errors, setErrors] = useState<any>({});
 	const [touched, setTouched] = useState<any>({});
@@ -169,5 +170,13 @@ export default function ForgotPasswordPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function ForgotPasswordPage() {
+	return (
+		<RecaptchaProvider>
+			<ForgotPasswordPageContent />
+		</RecaptchaProvider>
 	);
 }

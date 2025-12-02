@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import { showSuccess, showError } from "@/lib/notifications";
 import { resetPasswordSchema } from "@/lib/validationSchemas";
+import { RecaptchaProvider } from "../providers";
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
 	const [formData, setFormData] = useState({
 		password: "",
 		confirmPassword: "",
@@ -36,7 +37,9 @@ export default function ResetPasswordPage() {
 		// Obtener información de la solicitud (email)
 		const fetchRecoveryInfo = async () => {
 			try {
-				const response = await apiClient.get(`/auth/recovery-info/${requestId}`);
+				const response = await apiClient.get(
+					`/auth/recovery-info/${requestId}`
+				);
 				if (response.data.success) {
 					setEmail(response.data.email);
 				}
@@ -208,5 +211,13 @@ export default function ResetPasswordPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function ResetPasswordPage() {
+	return (
+		<RecaptchaProvider>
+			<ResetPasswordPageContent />
+		</RecaptchaProvider>
 	);
 }

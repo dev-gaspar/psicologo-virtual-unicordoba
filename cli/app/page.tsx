@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import { showSuccess, showError } from "@/lib/notifications";
 import { loginSchema } from "@/lib/validationSchemas";
+import { RecaptchaProvider } from "./providers";
 
-export default function LoginPage() {
+function LoginPageContent() {
 	const [formData, setFormData] = useState({
 		username: "",
 		password: "",
@@ -86,7 +87,10 @@ export default function LoginPage() {
 					localStorage.setItem("token", response.data.datauser.token);
 				}
 				if (response.data.datauser.refreshToken) {
-					localStorage.setItem("refreshToken", response.data.datauser.refreshToken);
+					localStorage.setItem(
+						"refreshToken",
+						response.data.datauser.refreshToken
+					);
 				}
 				showSuccess("Inicio de sesión exitoso");
 				setTimeout(() => router.push("/panel"), 1000);
@@ -233,5 +237,13 @@ export default function LoginPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function LoginPage() {
+	return (
+		<RecaptchaProvider>
+			<LoginPageContent />
+		</RecaptchaProvider>
 	);
 }

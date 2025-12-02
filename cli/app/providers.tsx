@@ -3,9 +3,18 @@
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import { useInactivityDetection } from "@/hooks/useInactivityDetection";
 
-export function Providers({ children }: { children: React.ReactNode }) {
-    useInactivityDetection();
-    
+// Provider global solo para detección de inactividad
+export function InactivityProvider({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	useInactivityDetection();
+	return <>{children}</>;
+}
+
+// Provider de reCAPTCHA solo para páginas públicas (login, registro, etc.)
+export function RecaptchaProvider({ children }: { children: React.ReactNode }) {
 	return (
 		<GoogleReCaptchaProvider reCaptchaKey="6LdfPBgsAAAAAAbVKJZH4xEXKxvnnAQGraFRcOFI">
 			{children}

@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/lib/apiClient";
 import { showSuccess, showError } from "@/lib/notifications";
 import { registerSchema } from "@/lib/validationSchemas";
+import { RecaptchaProvider } from "../providers";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
 	const [formData, setFormData] = useState({
 		fullName: "",
 		email: "",
@@ -403,5 +404,13 @@ export default function RegisterPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function RegisterPage() {
+	return (
+		<RecaptchaProvider>
+			<RegisterPageContent />
+		</RecaptchaProvider>
 	);
 }
