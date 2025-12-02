@@ -64,7 +64,7 @@ export default function VerifyCodePage() {
 			if (response.data.message === "CRQCOR") {
 				showSuccess("Código verificado correctamente. Redirigiendo...");
 				setTimeout(() => {
-					router.push(`/restablecer-contrasena?requestId=${requestId}`);
+					router.replace(`/restablecer-contrasena?requestId=${requestId}`);
 				}, 2000);
 			}
 		} catch (err: any) {
@@ -134,17 +134,7 @@ export default function VerifyCodePage() {
 										</>
 									)}
 								</button>
-
-								<div className="text-center">
-									<a
-										href="/recuperar-contrasena"
-										className="text-decoration-none"
-									>
-										<i className="fas fa-redo me-2"></i>Solicitar nuevo código
-									</a>
-								</div>
 							</form>
-
 							<div className="text-center mt-4">
 								<small className="text-muted">Protegido por reCAPTCHA v3</small>
 							</div>

@@ -11,12 +11,43 @@ const apiClient: AxiosInstance = axios.create({
     },
 });
 
+// Interceptor de solicitudes
+apiClient.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Variable para controlar el refresco de token
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 // Interceptor de respuestas
 apiClient.interceptors.response.use(
     (response: AxiosResponse) => {
         return response;
     },
-    (error: AxiosError<any>) => {
+    async (error: AxiosError<any>) => {
+        const originalRequest: any = error.config;
+
         // Error de red
         if (!error.response) {
             Swal.fire({
@@ -31,7 +62,49 @@ apiClient.interceptors.response.use(
             });
         }
 
+        // Si es un error 401 (no autorizado) y no es una reintento
+        if (error.response.status === 401 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise(function (resolve, reject) {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest.headers["Authorization"] = "Bearer " + token;
+                        return apiClient(originalRequest);
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    });
+            }
 
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            const refreshToken = localStorage.getItem("refreshToken");
+
+            if (refreshToken) {
+                try {
+                    const response = await axios.post(
+                        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api"}/auth/refresh-token`,
+                        { refreshToken }
+                    );
+
+                    if (response.data.success) {
+                        const newToken = response.data.token;
+                        localStorage.setItem("token", newToken);
+                        apiClient.defaults.headers.common["Authorization"] = "Bearer " + newToken;
+                        originalRequest.headers["Authorization"] = "Bearer " + newToken;
+                        processQueue(null, newToken);
+                        isRefreshing = false;
+                        return apiClient(originalRequest);
+                    }
+                } catch (refreshError) {
+                    processQueue(refreshError, null);
+                    isRefreshing = false;
+                    // Fallthrough to logout
+                }
+            }
+        }
 
         // Extraer código de error del backend
         const errorCode =
@@ -51,23 +124,32 @@ apiClient.interceptors.response.use(
             });
         }
 
-        // Si es un error 401 (no autorizado), redirigir al login
+        // Si es un error 401 y falló el refresh o no había token
         if (error.response.status === 401) {
             localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+
             if (window.location.pathname !== "/") {
                 window.location.href = "/";
             }
-            Swal.fire({
-                icon: "warning",
-                title: "Sesión expirada",
-                text: "Por favor, inicia sesión nuevamente",
-                confirmButtonColor: "#3085d6",
-            });
+
+            if (!originalRequest._retry) { // Solo mostrar alerta si no fue un intento de refresh fallido
+                Swal.fire({
+                    icon: "warning",
+                    title: "Sesión expirada",
+                    text: "Por favor, inicia sesión nuevamente",
+                    confirmButtonColor: "#3085d6",
+                });
+            }
+
             return Promise.reject({
                 code: "SESEXP",
                 message: "Sesión expirada",
             });
         }
+
+        return Promise.reject(error);
     }
 );
 

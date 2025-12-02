@@ -19,6 +19,8 @@ export default function ResetPasswordPage() {
 	const searchParams = useSearchParams();
 	const requestId = searchParams.get("requestId");
 
+	const [email, setEmail] = useState("");
+
 	useEffect(() => {
 		const userData = localStorage.getItem("user");
 		if (userData) {
@@ -28,7 +30,23 @@ export default function ResetPasswordPage() {
 
 		if (!requestId) {
 			showError("ID de solicitud no válido");
+			return;
 		}
+
+		// Obtener información de la solicitud (email)
+		const fetchRecoveryInfo = async () => {
+			try {
+				const response = await apiClient.get(`/auth/recovery-info/${requestId}`);
+				if (response.data.success) {
+					setEmail(response.data.email);
+				}
+			} catch (error) {
+				console.error("Error fetching recovery info:", error);
+				showError("No se pudo obtener información de la solicitud");
+			}
+		};
+
+		fetchRecoveryInfo();
 	}, [requestId, router]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -91,6 +109,19 @@ export default function ResetPasswordPage() {
 							</div>
 
 							<form onSubmit={handleSubmit}>
+								<div className="single-input has-label">
+									<label htmlFor="email">Correo Electrónico</label>
+									<i className="fas fa-envelope"></i>
+									<input
+										type="email"
+										className="form-control"
+										id="email"
+										value={email}
+										disabled
+										readOnly
+										style={{ backgroundColor: "#e9ecef" }}
+									/>
+								</div>
 								<div className="single-input has-label">
 									<label htmlFor="password">Nueva Contraseña</label>
 									<i className="fas fa-key"></i>

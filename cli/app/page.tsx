@@ -82,6 +82,12 @@ export default function LoginPage() {
 
 			if (response.data.codemsg === "USRCCT") {
 				localStorage.setItem("user", JSON.stringify(response.data.datauser));
+				if (response.data.datauser.token) {
+					localStorage.setItem("token", response.data.datauser.token);
+				}
+				if (response.data.datauser.refreshToken) {
+					localStorage.setItem("refreshToken", response.data.datauser.refreshToken);
+				}
 				showSuccess("Inicio de sesión exitoso");
 				setTimeout(() => router.push("/panel"), 1000);
 			} else {

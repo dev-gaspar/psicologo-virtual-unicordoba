@@ -221,4 +221,37 @@ public class AuthController {
                 throw new RuntimeException("Código de respuesta desconocido: " + messageCode);
         }
     }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return ResponseEntity.ok(authService.validateToken(token));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<Map<String, Object>> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        if (refreshToken == null) {
+            throw new ValidationException("TKNREQ", "Refresh token is required");
+        }
+
+        Map<String, Object> result = authService.refreshAccessToken(refreshToken);
+        if ((boolean) result.get("success")) {
+            return ResponseEntity.ok(result);
+        } else {
+            throw new AuthenticationException("TKNINV", (String) result.get("message"));
+        }
+    }
+
+    @GetMapping("/recovery-info/{requestId}")
+    public ResponseEntity<Map<String, Object>> getRecoveryInfo(@PathVariable String requestId) {
+        Map<String, Object> result = authService.getRecoveryRequestInfo(requestId);
+        if ((boolean) result.get("success")) {
+            return ResponseEntity.ok(result);
+        } else {
+            throw new ResourceNotFoundException("RQNEX", "Solicitud de recuperación no encontrada");
+        }
+    }
 }

@@ -78,13 +78,9 @@ export default function ForgotPasswordPage() {
 
 			if (response.data.message === "CODGEN") {
 				showSuccess(
-					"Se ha enviado un código de verificación a tu correo electrónico."
+					"Se ha enviado un código de verificación a tu correo electrónico. Por favor revisa tu bandeja de entrada."
 				);
-				setTimeout(() => {
-					router.push(
-						`/verificar-codigo?requestId=${response.data.request_id}`
-					);
-				}, 2000);
+				// No redirigir, el usuario debe ir a su correo
 			}
 		} catch (err: any) {
 			showError(err.message || "Error al solicitar recuperación");
