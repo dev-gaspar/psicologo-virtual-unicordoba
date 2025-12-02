@@ -132,7 +132,6 @@ function ResetPasswordPageContent() {
 								</div>
 								<div className="single-input has-label">
 									<label htmlFor="password">Nueva Contraseña</label>
-									<i className="fas fa-key"></i>
 									<input
 										type="password"
 										className={errors.password ? "is-invalid" : ""}
