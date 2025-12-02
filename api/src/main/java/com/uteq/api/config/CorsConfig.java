@@ -17,9 +17,11 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://psicologo-virtual-web.devgaspar.me"));
+        // Usar allowedOriginPatterns en lugar de allowedOrigins cuando allowCredentials es true
+        config.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "https://*.devgaspar.me"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setExposedHeaders(Arrays.asList("Authorization"));
         
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);

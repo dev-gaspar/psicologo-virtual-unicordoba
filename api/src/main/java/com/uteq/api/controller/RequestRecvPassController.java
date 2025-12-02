@@ -13,7 +13,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/request-recovery")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class RequestRecvPassController {
     
     private final RequestRecvPassService requestRecvPassService;
