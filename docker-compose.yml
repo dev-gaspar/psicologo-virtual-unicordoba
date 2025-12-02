@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:15
+    container_name: uteq_db
+    environment:
+      POSTGRES_DB: uteq_web_bd
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: JG_1064980429
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: always
+
+  ai:
+    build: ./ai
+    container_name: uteq_ai
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./ai/.env
+    environment:
+      - HOST=0.0.0.0
+    volumes:
+      - ./ai/models:/app/models
+    restart: always
+
+  api:
+    build: ./api
+    container_name: uteq_api
+    ports:
+      - "8082:8080"
+    env_file:
+      - ./api/.env
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/uteq_web_bd?currentSchema=public
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      - db
+    restart: always
+
+  cli:
+    build:
+      context: ./cli
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_AI_API_URL: ${NEXT_PUBLIC_AI_API_URL}
+    container_name: uteq_cli
+    ports:
+      - "3005:3000"
+    depends_on:
+      - api
+      - ai
+    restart: always
+
+volumes:
+  postgres_data:
