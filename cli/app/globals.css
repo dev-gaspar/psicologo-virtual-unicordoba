@@ -1,1 +1,446 @@
+/* Fuente Open Sans */
+@font-face {
+	font-family: "Open Sans";
+	src: url("/fonts/Open_Sans/static/OpenSans-Regular.ttf") format("truetype");
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Open Sans";
+	src: url("/fonts/Open_Sans/static/OpenSans-Bold.ttf") format("truetype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Open Sans";
+	src: url("/fonts/Open_Sans/static/OpenSans-SemiBold.ttf") format("truetype");
+	font-weight: 600;
+	font-style: normal;
+}
+
+/* Variables de colores institucionales - Optimizadas para WCAG AA */
+:root {
+	--primary-green: #3f6129;
+	--light-bg: #fafafa;
+	--secondary-green: #4a7632;
+	--dark-text: #2e2e2e;
+	--white-bg: #fefefe;
+	--success: #3f6129;
+	--danger: #dc3545;
+	--warning: #d97706;
+	--dark-green-bg: #3a6b2e;
+}
+
+/* Tema claro (por defecto) */
+[data-bs-theme="light"] {
+	--bs-body-bg: var(--light-bg);
+	--bs-body-color: var(--dark-text);
+	--bs-primary: var(--primary-green);
+	--bs-secondary: var(--secondary-green);
+	--bs-border-color: #dee2e6;
+}
+
+/* Tema oscuro */
+[data-bs-theme="dark"] {
+	--bs-body-bg: #1a1a1a;
+	--bs-body-color: #f5f5f5;
+	--bs-primary: var(--primary-green);
+	--bs-secondary: var(--secondary-green);
+	--bs-border-color: #495057;
+}
+
 /* Estilos globales */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	background-color: var(--light-bg);
+	color: var(--dark-text);
+	line-height: 1.6;
+}
+
+/* Botones personalizados */
+.btn {
+	font-family: "Open Sans", sans-serif;
+	font-size: 16px;
+	padding: 12px 24px;
+	border-radius: 8px;
+	transition: all 0.3s ease;
+}
+
+.btn-primary {
+	background-color: var(--primary-green) !important;
+	border-color: var(--primary-green) !important;
+	color: white !important;
+	font-weight: 600;
+	min-height: 48px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover:not(:disabled) {
+	background-color: var(--secondary-green) !important;
+	border-color: var(--secondary-green) !important;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:active:not(:disabled) {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:disabled {
+	background-color: #9e9e9e !important;
+	border-color: #9e9e9e !important;
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+.btn-outline-primary {
+	color: var(--primary-green) !important;
+	border-color: var(--primary-green) !important;
+}
+
+.btn-outline-primary:hover {
+	background-color: var(--primary-green) !important;
+	border-color: var(--primary-green) !important;
+	color: white !important;
+}
+
+/* Formularios estilo Nova con paleta institucional */
+.single-input {
+	position: relative;
+	margin-bottom: 20px;
+}
+
+.single-input label {
+	display: block;
+	width: 100%;
+	margin-bottom: 10px;
+	font-weight: 500;
+	color: var(--dark-text);
+}
+
+.single-input input,
+.single-input select,
+.single-input textarea {
+	background: #ffffff;
+	border-radius: 8px;
+	position: relative;
+	padding-right: 20px;
+	padding-left: 50px;
+	width: 100%;
+	border: 1px solid #e0e0e0;
+	box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+	transition: all 0.3s ease-out 0s;
+	font-size: 15px;
+	color: var(--dark-text);
+}
+
+.single-input input::placeholder,
+.single-input select::placeholder,
+.single-input textarea::placeholder {
+	font-weight: 300;
+	opacity: 0.7;
+	color: #464646;
+}
+
+.single-input input:focus,
+.single-input select:focus,
+.single-input textarea:focus {
+	border-color: var(--primary-green);
+	box-shadow: 0px 5px 30px rgba(90, 138, 58, 0.25);
+	outline: none;
+}
+
+.single-input input {
+	height: 56px;
+}
+
+.single-input select {
+	height: 56px;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233f6129' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 15px center;
+	background-size: 16px;
+	padding-right: 45px;
+	cursor: pointer;
+}
+
+.single-input textarea {
+	padding: 15px 20px;
+	padding-left: 50px;
+	resize: none;
+}
+
+.single-input i {
+	position: absolute;
+	left: 18px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--primary-green);
+	font-size: 18px;
+	pointer-events: none;
+	z-index: 10;
+}
+
+.single-input.has-label i {
+	top: 55px;
+	transform: none;
+}
+
+/* Validación de errores */
+.single-input input.is-invalid,
+.single-input select.is-invalid,
+.single-input textarea.is-invalid {
+	border-color: var(--danger);
+	box-shadow: 0px 5px 25px rgba(220, 53, 69, 0.15);
+}
+
+.single-input .invalid-feedback {
+	display: block;
+	color: var(--danger);
+	font-size: 0.875rem;
+	margin-top: 5px;
+}
+
+/* Input-group legacy support (deprecated) */
+.input-group-text {
+	background-color: var(--primary-green);
+	color: white;
+	border-color: var(--primary-green);
+}
+
+.form-control:focus {
+	border-color: var(--primary-green);
+	box-shadow: 0 0 0 0.25rem rgba(90, 138, 58, 0.25);
+}
+
+.form-select:focus {
+	border-color: var(--primary-green);
+	box-shadow: 0 0 0 0.25rem rgba(90, 138, 58, 0.25);
+}
+
+/* Mensajes de validación */
+.invalid-feedback {
+	display: block;
+	color: var(--danger);
+	font-size: 0.875rem;
+	margin-top: 0.25rem;
+}
+
+.is-invalid {
+	border-color: var(--danger) !important;
+}
+
+.is-valid {
+	border-color: var(--success) !important;
+}
+
+/* Cards */
+.card {
+	border-radius: 12px;
+	border: none;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s ease;
+}
+
+.card:hover {
+	box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Links */
+a {
+	color: var(--primary-green);
+	text-decoration: none;
+	transition: color 0.3s ease;
+	font-weight: 500;
+}
+
+a:hover {
+	color: var(--secondary-green);
+	text-decoration: underline;
+}
+
+/* Contenedor de formulario centrado */
+.min-vh-100 {
+	background-color: var(--light-bg);
+}
+
+/* Animación de carga */
+.spinner-border-primary {
+	color: var(--primary-green) !important;
+}
+
+.btn-primary .spinner-border {
+	border-color: rgba(255, 255, 255, 0.3);
+	border-top-color: white;
+}
+
+/* Mensajes de alerta personalizados */
+.alert-primary {
+	background-color: rgba(135, 186, 87, 0.1);
+	border-color: var(--primary-green);
+	color: #4a7c2f;
+}
+
+/* Encabezados */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: 700;
+	color: var(--dark-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.card {
+		margin: 1rem;
+	}
+
+	.card-body {
+		padding: 2rem 1.5rem !important;
+	}
+
+	.single-input label {
+		font-size: 14px;
+	}
+
+	.single-input input,
+	.single-input select {
+		font-size: 16px; /* Evita zoom en iOS */
+	}
+
+	.btn {
+		font-size: 15px;
+		padding: 10px 20px;
+	}
+
+	h2 {
+		font-size: 1.5rem;
+	}
+}
+
+/* Logo/Branding */
+.brand-text {
+	color: var(--primary-green);
+	font-weight: 700;
+}
+
+/* Clases de color institucional */
+.text-primary {
+	color: var(--primary-green) !important;
+}
+
+.text-secondary {
+	color: var(--secondary-green) !important;
+}
+
+/* Links institucionales */
+a.text-decoration-none {
+	color: var(--primary-green);
+	font-weight: 500;
+}
+
+a.text-decoration-none:hover {
+	color: var(--secondary-green);
+}
+
+/* Diseño de pantalla dividida para login */
+.split-screen {
+	display: flex;
+	min-height: 100vh;
+}
+
+.split-left {
+	flex: 1;
+	background: linear-gradient(135deg, var(--dark-green-bg) 0%, #2d5a3f 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem;
+	color: white;
+}
+
+.split-right {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem;
+	background-color: var(--light-bg);
+}
+
+.split-content {
+	max-width: 500px;
+	width: 100%;
+}
+
+.split-left h1 {
+	font-size: 3rem;
+	font-weight: 700;
+	margin-bottom: 1.5rem;
+	color: #ffffff;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.split-left p {
+	font-size: 1.25rem;
+	color: #f5f5f5;
+	line-height: 1.8;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.split-left small {
+	color: #e8e8e8;
+}
+
+@media (max-width: 992px) {
+	.split-screen {
+		flex-direction: column;
+	}
+
+	.split-left {
+		display: none;
+	}
+
+	.split-right {
+		min-height: 100vh;
+		padding: 2rem 1.5rem;
+	}
+
+	.split-content {
+		max-width: 400px;
+	}
+}
+
+/* Text muted institucional */
+.text-muted {
+	color: #464646 !important;
+}
+
+p.text-muted {
+	color: #464646 !important;
+}
+
+/* Iconos en links */
+a i.fas,
+a i.far {
+	color: inherit;
+}
+
+/* Iconos en botones primarios */
+.btn-primary i {
+	color: white !important;
+}

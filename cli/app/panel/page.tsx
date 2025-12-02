@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { showConfirm, showSuccess } from "@/lib/notifications";
 
 export default function DashboardPage() {
 	const [user, setUser] = useState<any>(null);
@@ -16,9 +17,17 @@ export default function DashboardPage() {
 		}
 	}, [router]);
 
-	const handleLogout = () => {
-		localStorage.removeItem("user");
-		router.push("/");
+	const handleLogout = async () => {
+		const result = await showConfirm(
+			"¿Estás seguro de que deseas cerrar sesión?",
+			"Cerrar Sesión"
+		);
+
+		if (result.isConfirmed) {
+			localStorage.removeItem("user");
+			showSuccess("Sesión cerrada correctamente");
+			setTimeout(() => router.push("/"), 1000);
+		}
 	};
 
 	if (!user) {
@@ -29,7 +38,7 @@ export default function DashboardPage() {
 		<div className="container-fluid">
 			<nav className="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div className="container-fluid">
-					<a className="navbar-brand" href="/dashboard">
+					<a className="navbar-brand" href="/panel">
 						UTEQ Platform
 					</a>
 					<div className="d-flex">
