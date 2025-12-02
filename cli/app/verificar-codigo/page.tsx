@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useRouter, useSearchParams } from "next/navigation";
 import apiClient from "@/lib/apiClient";
@@ -169,7 +169,9 @@ function VerifyCodePageContent() {
 export default function VerifyCodePage() {
 	return (
 		<RecaptchaProvider>
-			<VerifyCodePageContent />
+			<Suspense fallback={<div>Cargando...</div>}>
+				<VerifyCodePageContent />
+			</Suspense>
 		</RecaptchaProvider>
 	);
 }
