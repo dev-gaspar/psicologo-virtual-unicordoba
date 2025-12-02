@@ -1,16 +1,18 @@
 package com.uteq.api.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final com.uteq.api.repository.UserRepository userRepository;
+    private final com.uteq.api.repository.ResetPassRepository resetPassRepository;
 
     @Transactional
     public Map<String, Object> login(String username, String rawPassword) {
@@ -174,7 +177,78 @@ public class AuthService {
     @Transactional
     public Map<String, Object> resetPassword(String codeReq, String password) {
         try {
-            // Hashear la nueva contraseña
+            // Validar que codeReq no sea nulo o vacío
+            if (codeReq == null || codeReq.trim().isEmpty()) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("message", "CRQNVD");
+                error.put("code", "");
+                error.put("request_id", null);
+                return error;
+            }
+
+            // Validar que password no sea nulo o vacío
+            if (password == null || password.trim().isEmpty()) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("message", "PASNVD");
+                error.put("code", "");
+                error.put("request_id", null);
+                return error;
+            }
+
+            UUID requestId = UUID.fromString(codeReq.trim());
+            
+            // Obtener el registro de reset pass para obtener el usuario
+            com.uteq.api.entity.ResetPass resetPass = resetPassRepository.findByIdRequest(requestId).orElse(null);
+            
+            if (resetPass == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("message", "CRQNEX");
+                error.put("code", "");
+                error.put("request_id", null);
+                return error;
+            }
+
+            // Obtener el usuario
+            com.uteq.api.entity.User user = resetPass.getUser();
+            
+            // 1. Verificar contra la contraseña actual del usuario
+            if (passwordEncoder.matches(password.trim(), user.getPassword().trim())) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("message", "PSWEQS");
+                error.put("code", "");
+                error.put("request_id", null);
+                return error;
+            }
+
+            // 2. Obtener todas las contraseñas antiguas del historial de este usuario
+            java.util.List<com.uteq.api.entity.ResetPass> passwordHistory = resetPassRepository.findByUser(user);
+            
+            // 3. Verificar contra todas las contraseñas antiguas
+            for (com.uteq.api.entity.ResetPass historyEntry : passwordHistory) {
+                // Verificar old_password
+                if (historyEntry.getOldPassword() != null && 
+                    !historyEntry.getOldPassword().trim().isEmpty() &&
+                    passwordEncoder.matches(password.trim(), historyEntry.getOldPassword().trim())) {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("message", "PSWEQS");
+                    error.put("code", "");
+                    error.put("request_id", null);
+                    return error;
+                }
+                
+                // Verificar new_password (contraseñas que se establecieron anteriormente)
+                if (historyEntry.getNewPassword() != null && 
+                    !historyEntry.getNewPassword().trim().isEmpty() &&
+                    passwordEncoder.matches(password.trim(), historyEntry.getNewPassword().trim())) {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("message", "PSWEQS");
+                    error.put("code", "");
+                    error.put("request_id", null);
+                    return error;
+                }
+            }
+
+            // Si pasa todas las validaciones, hashear la nueva contraseña y proceder
             String hashedPassword = passwordEncoder.encode(password.trim());
 
             String sql = "SELECT CAST(us_update_password_step_3(:code_req, :passwordus) AS TEXT)";
@@ -184,10 +258,18 @@ public class AuthService {
                     .getSingleResult();
 
             return objectMapper.readValue(jsonResult, Map.class);
+        } catch (IllegalArgumentException e) {
+            // Error al parsear UUID
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "CRQINV");
+            error.put("code", "UUID inválido");
+            error.put("request_id", null);
+            return error;
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, Object> error = new HashMap<>();
             error.put("message", "ERROR");
-            error.put("code", "");
+            error.put("code", e.getMessage());
             error.put("request_id", null);
             return error;
         }
