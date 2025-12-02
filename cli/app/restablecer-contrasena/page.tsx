@@ -100,18 +100,23 @@ function ResetPasswordPageContent() {
 
 	return (
 		<div className="container">
-			<div className="row justify-content-center align-items-center min-vh-100">
-				<div className="col-md-5">
-					<div className="card shadow">
-						<div className="card-body p-5">
-							<div className="mb-4">
-								<h2 className="brand-text mb-3">Cambiar Contraseña</h2>
-								<p className="text-muted">
-									Ingresa tu nueva contraseña segura.
+			<div className="row justify-content-center align-items-center min-vh-100 py-4">
+				<div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+					<div className="card shadow-lg border-0">
+						<div className="card-body p-4 p-md-5">
+							<div className="text-center mb-4">
+								<i
+									className="fas fa-lock-open fs-1 mb-3"
+									aria-hidden="true"
+									style={{ color: "var(--primary-green)" }}
+								></i>
+								<h1 className="brand-text h3 mb-2">Cambiar Contraseña</h1>
+								<p className="text-muted mb-0">
+									Ingresa tu nueva contraseña segura
 								</p>
 							</div>
 
-							<form onSubmit={handleSubmit}>
+							<form onSubmit={handleSubmit} noValidate>
 								<div className="single-input has-label">
 									<label htmlFor="email">Correo Electrónico</label>
 									<i className="fas fa-envelope"></i>
@@ -175,36 +180,48 @@ function ResetPasswordPageContent() {
 									)}
 								</div>
 
-								<button
-									type="submit"
-									className="btn btn-primary w-100 mb-3"
-									disabled={loading}
-								>
-									{loading ? (
-										<>
-											<span
-												className="spinner-border spinner-border-sm me-2"
-												role="status"
-											></span>
-											Actualizando...
-										</>
-									) : (
-										<>
-											<i className="fas fa-save me-2"></i>Actualizar Contraseña
-										</>
-									)}
-								</button>
+								<div className="d-grid gap-2 mt-4">
+									<button
+										type="submit"
+										className="btn btn-primary"
+										disabled={loading}
+										aria-label={
+											loading
+												? "Actualizando contraseña, por favor espere"
+												: "Actualizar contraseña"
+										}
+									>
+										{loading ? (
+											<>
+												<span
+													className="spinner-border spinner-border-sm me-2"
+													role="status"
+													aria-hidden="true"
+												></span>
+												<span>Actualizando...</span>
+											</>
+										) : (
+											<>
+												<i className="fas fa-save me-2" aria-hidden="true"></i>
+												<span>Actualizar Contraseña</span>
+											</>
+										)}
+									</button>
+								</div>
 
-								<div className="text-center">
-									<small className="text-muted">
-										<i className="fas fa-clock me-1"></i>El formulario expira en
-										60 minutos
+								<div className="text-center mt-3">
+									<small className="text-muted d-flex align-items-center justify-content-center gap-1">
+										<i className="fas fa-clock" aria-hidden="true"></i>
+										<span>El formulario expira en 60 minutos</span>
 									</small>
 								</div>
 							</form>
 
 							<div className="text-center mt-4">
-								<small className="text-muted">Protegido por reCAPTCHA v3</small>
+								<small className="text-muted d-flex align-items-center justify-content-center gap-2">
+									<i className="fas fa-shield-alt" aria-hidden="true"></i>
+									<span>Protegido por reCAPTCHA v3</span>
+								</small>
 							</div>
 						</div>
 					</div>

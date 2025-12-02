@@ -117,18 +117,26 @@ function RegisterPageContent() {
 
 	return (
 		<div className="container">
-			<div className="row justify-content-center align-items-center min-vh-100 py-5">
-				<div className="col-md-7">
-					<div className="card shadow">
-						<div className="card-body p-5">
-							<div className="mb-4">
-								<h2 className="brand-text mb-3">Registro de Usuario</h2>
-								<p className="text-muted">Crea tu cuenta en la plataforma</p>
+			<div className="row justify-content-center align-items-center min-vh-100 py-4 py-md-5">
+				<div className="col-12 col-md-9 col-lg-8 col-xl-7">
+					<div className="card shadow-lg border-0">
+						<div className="card-body p-4 p-md-5">
+							{/* Header */}
+							<div className="text-center mb-4">
+								<i
+									className="fas fa-user-plus fs-1 mb-3"
+									aria-hidden="true"
+									style={{ color: "var(--primary-green)" }}
+								></i>
+								<h1 className="brand-text h3 mb-2">Registro de Usuario</h1>
+								<p className="text-muted mb-0">
+									Crea tu cuenta para acceder a la plataforma
+								</p>
 							</div>
 
-							<form onSubmit={handleSubmit}>
-								<div className="row">
-									<div className="col-md-6">
+							<form onSubmit={handleSubmit} noValidate>
+								<div className="row g-3">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="fullName">Nombre Completo</label>
 											<i className="fas fa-id-card" aria-hidden="true"></i>
@@ -165,7 +173,7 @@ function RegisterPageContent() {
 										</div>
 									</div>
 
-									<div className="col-md-6">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="email">Correo Electrónico</label>
 											<i className="fas fa-envelope" aria-hidden="true"></i>
@@ -202,7 +210,7 @@ function RegisterPageContent() {
 								</div>
 
 								<div className="row">
-									<div className="col-md-6">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="username">Usuario</label>
 											<i className="fas fa-user" aria-hidden="true"></i>
@@ -239,7 +247,7 @@ function RegisterPageContent() {
 										</div>
 									</div>
 
-									<div className="col-md-6">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="country">País</label>
 											<i className="fas fa-globe" aria-hidden="true"></i>
@@ -283,7 +291,7 @@ function RegisterPageContent() {
 								</div>
 
 								<div className="row">
-									<div className="col-md-6">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="password">Contraseña</label>
 											<i className="fas fa-lock" aria-hidden="true"></i>
@@ -322,7 +330,7 @@ function RegisterPageContent() {
 										</div>
 									</div>
 
-									<div className="col-md-6">
+									<div className="col-12 col-md-6">
 										<div className="single-input has-label">
 											<label htmlFor="confirmPassword">
 												Confirmar Contraseña
@@ -367,37 +375,57 @@ function RegisterPageContent() {
 									</div>
 								</div>
 
-								<button
-									type="submit"
-									className="btn btn-primary w-100 mb-3"
-									disabled={loading}
-									aria-label="Registrarse"
-								>
-									{loading ? (
-										<>
-											<span
-												className="spinner-border spinner-border-sm me-2"
-												role="status"
-											></span>
-											Registrando...
-										</>
-									) : (
-										<>
-											<i className="fas fa-user-check me-2"></i>Registrarse
-										</>
-									)}
-								</button>
+								<div className="d-grid gap-2 mt-4">
+									<button
+										type="submit"
+										className="btn btn-primary"
+										disabled={loading}
+										aria-label={
+											loading ? "Registrando, por favor espere" : "Crear cuenta"
+										}
+									>
+										{loading ? (
+											<>
+												<span
+													className="spinner-border spinner-border-sm me-2"
+													role="status"
+													aria-hidden="true"
+												></span>
+												<span>Registrando...</span>
+											</>
+										) : (
+											<>
+												<i
+													className="fas fa-user-check me-2"
+													aria-hidden="true"
+												></i>
+												<span>Crear Cuenta</span>
+											</>
+										)}
+									</button>
+								</div>
 
-								<div className="text-center">
+								<div className="text-center mt-3">
 									<span className="text-muted">¿Ya tienes cuenta? </span>
-									<a href="/" className="text-decoration-none">
-										<i className="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+									<a
+										href="/"
+										className="text-decoration-none fw-semibold"
+										aria-label="Ir a la página de inicio de sesión"
+									>
+										<i
+											className="fas fa-sign-in-alt me-1"
+											aria-hidden="true"
+										></i>
+										Iniciar Sesión
 									</a>
 								</div>
 							</form>
 
 							<div className="text-center mt-4">
-								<small className="text-muted">Protegido por reCAPTCHA v3</small>
+								<small className="text-muted d-flex align-items-center justify-content-center gap-2">
+									<i className="fas fa-shield-alt" aria-hidden="true"></i>
+									<span>Protegido por reCAPTCHA v3</span>
+								</small>
 							</div>
 						</div>
 					</div>
