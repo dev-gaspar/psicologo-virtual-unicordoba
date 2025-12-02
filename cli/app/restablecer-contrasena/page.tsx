@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { useRouter, useSearchParams } from "next/navigation";
 import apiClient from "@/lib/apiClient";
@@ -233,7 +233,9 @@ function ResetPasswordPageContent() {
 export default function ResetPasswordPage() {
 	return (
 		<RecaptchaProvider>
-			<ResetPasswordPageContent />
+			<Suspense fallback={<div>Cargando...</div>}>
+				<ResetPasswordPageContent />
+			</Suspense>
 		</RecaptchaProvider>
 	);
 }
