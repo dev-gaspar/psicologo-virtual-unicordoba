@@ -16,7 +16,12 @@ export function InactivityProvider({
 // Provider de reCAPTCHA solo para páginas públicas (login, registro, etc.)
 export function RecaptchaProvider({ children }: { children: React.ReactNode }) {
 	return (
-		<GoogleReCaptchaProvider reCaptchaKey="6LdfPBgsAAAAAAbVKJZH4xEXKxvnnAQGraFRcOFI">
+		<GoogleReCaptchaProvider
+			reCaptchaKey={
+				process.env.NEXT_PUBLIC_RECAPTCHA_KEY ||
+				"6LdfPBgsAAAAAAbVKJZH4xEXKxvnnAQGraFRcOFI"
+			}
+		>
 			{children}
 		</GoogleReCaptchaProvider>
 	);
