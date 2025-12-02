@@ -31,6 +31,26 @@ apiClient.interceptors.response.use(
             });
         }
 
+
+
+        // Extraer código de error del backend
+        const errorCode =
+            error.response?.data?.message ||
+            error.response?.data?.codemsg ||
+            error.response?.data?.error ||
+            "UNKERR";
+
+        const errorMessage = getErrorMessage(errorCode);
+
+        if (errorMessage) {
+            // Rechazar con el error procesado (sin spread del error original)
+            return Promise.reject({
+                code: errorCode,
+                message: errorMessage,
+                status: error.response.status,
+            });
+        }
+
         // Si es un error 401 (no autorizado), redirigir al login
         if (error.response.status === 401) {
             localStorage.removeItem("user");
@@ -48,22 +68,6 @@ apiClient.interceptors.response.use(
                 message: "Sesión expirada",
             });
         }
-
-        // Extraer código de error del backend
-        const errorCode =
-            error.response?.data?.message ||
-            error.response?.data?.codemsg ||
-            error.response?.data?.error ||
-            "UNKERR";
-
-        const errorMessage = getErrorMessage(errorCode);
-
-        // Rechazar con el error procesado (sin spread del error original)
-        return Promise.reject({
-            code: errorCode,
-            message: errorMessage,
-            status: error.response.status,
-        });
     }
 );
 
