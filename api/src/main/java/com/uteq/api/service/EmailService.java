@@ -1,23 +1,24 @@
 package com.uteq.api.service;
 
-import com.uteq.api.entity.TemplateEmail;
-import com.uteq.api.repository.TemplateEmailRepository;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
-
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.uteq.api.entity.TemplateEmail;
+import com.uteq.api.repository.TemplateEmailRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-        private final JavaMailSender mailSender;
         private final TemplateEmailRepository templateEmailRepository;
+
+        @Autowired(required = false)
+        private EmailProvider emailProvider;
 
         @org.springframework.beans.factory.annotation.Value("${app.frontend.verify-code-url}")
         private String verifyCodeUrl;
@@ -25,7 +26,7 @@ public class EmailService {
         @org.springframework.beans.factory.annotation.Value("${app.frontend.reset-password-url}")
         private String resetPasswordUrl;
 
-        public void sendWelcomeEmail(String to, String fullName) throws MessagingException {
+        public void sendWelcomeEmail(String to, String fullName) throws Exception {
                 TemplateEmail template = templateEmailRepository.findByTypeTempl("WELCM")
                                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
@@ -35,7 +36,7 @@ public class EmailService {
                 sendHtmlEmail(to, "Bienvenido a UTEQ Platform", content);
         }
 
-        public void sendRecoveryCodeEmail(String to, String code, String requestId) throws MessagingException {
+        public void sendRecoveryCodeEmail(String to, String code, String requestId) throws Exception {
                 TemplateEmail template = templateEmailRepository.findByTypeTempl("RECVP")
                                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
@@ -49,7 +50,7 @@ public class EmailService {
                 sendHtmlEmail(to, "Recuperación de contraseña - Código de verificación", content);
         }
 
-        public void sendCodeVerifiedEmail(String to, String requestId) throws MessagingException {
+        public void sendCodeVerifiedEmail(String to, String requestId) throws Exception {
                 TemplateEmail template = templateEmailRepository.findByTypeTempl("RCPS2")
                                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
@@ -62,14 +63,14 @@ public class EmailService {
                 sendHtmlEmail(to, "Recuperación de contraseña - Código verificado", content);
         }
 
-        public void sendPasswordUpdatedEmail(String to) throws MessagingException {
+        public void sendPasswordUpdatedEmail(String to) throws Exception {
                 TemplateEmail template = templateEmailRepository.findByTypeTempl("RCPS3")
                                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
                 sendHtmlEmail(to, "Contraseña actualizada exitosamente", template.getTemplateEmail());
         }
 
-        public void sendLoginNotificationEmail(String to, String username) throws MessagingException {
+        public void sendLoginNotificationEmail(String to, String username) throws Exception {
                 TemplateEmail template = templateEmailRepository.findByTypeTempl("LOGIN")
                                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
@@ -83,15 +84,11 @@ public class EmailService {
                 sendHtmlEmail(to, "Inicio de sesión exitoso", content);
         }
 
-        private void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-                helper.setTo(to);
-                helper.setSubject(subject);
-                helper.setText(htmlContent, true);
-                helper.setFrom("uteq-project@gmail.com");
-
-                mailSender.send(message);
+        private void sendHtmlEmail(String to, String subject, String htmlContent) throws Exception {
+                if (emailProvider == null) {
+                        System.err.println("Email provider not configured - email not sent to: " + to);
+                        return;
+                }
+                emailProvider.sendEmail(to, subject, htmlContent);
         }
 }
