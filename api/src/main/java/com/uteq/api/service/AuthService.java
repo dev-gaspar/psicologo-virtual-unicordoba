@@ -1,21 +1,22 @@
 package com.uteq.api.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.persistence.EntityManager;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final EntityManager entityManager;
@@ -23,7 +24,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final com.uteq.api.repository.UserRepository userRepository;
-    private final com.uteq.api.repository.ResetPassRepository resetPassRepository;
 
     @Transactional
     public Map<String, Object> login(String username, String rawPassword) {
@@ -177,102 +177,175 @@ public class AuthService {
     @Transactional
     public Map<String, Object> resetPassword(String codeReq, String password) {
         try {
-            // Validar que codeReq no sea nulo o vacío
-            if (codeReq == null || codeReq.trim().isEmpty()) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("message", "CRQNVD");
-                error.put("code", "");
-                error.put("request_id", null);
-                return error;
+            String rawPassword = password.trim();
+            
+            // 1. Validaciones básicas
+            if (codeReq == null || codeReq.isBlank()) {
+                return buildErrorResponse("CRQNVD");
+            }
+            if (rawPassword.isEmpty()) {
+                return buildErrorResponse("PASNVD");
+            }
+            
+            UUID codeUuid;
+            try {
+                codeUuid = UUID.fromString(codeReq.trim());
+            } catch (IllegalArgumentException e) {
+                return buildErrorResponse("CRQINV");
+            }
+            
+            // 2. Obtener información del reset y del usuario (Agregamos u.username para validación legacy)
+            String sqlGetResetInfo = "SELECT u.id_user, u.password, u.email, r.date_expired, u.username " +
+                    "FROM pl_reset_pass r " +
+                    "JOIN pl_user u ON r.id_user = u.id_user " +
+                    "WHERE r.id_request = :code_req AND r.used = FALSE";
+            
+            Object[] resetInfo;
+            try {
+                resetInfo = (Object[]) entityManager.createNativeQuery(sqlGetResetInfo)
+                        .setParameter("code_req", codeUuid)
+                        .getSingleResult();
+            } catch (Exception e) {
+                log.warn("Reset request not found or query failed: {}", e.getMessage());
+                return buildErrorResponse("CRQNEX");
+            }
+            
+            if (resetInfo == null || resetInfo.length < 5) {
+                return buildErrorResponse("CRQNEX");
+            }
+            
+            UUID userId = (UUID) resetInfo[0];
+            String currentPasswordHashInDB = (String) resetInfo[1];
+            String userEmail = (String) resetInfo[2];
+            Object dateExpiredObj = resetInfo[3];
+            String username = (String) resetInfo[4];
+            
+            // 3. Validar expiración
+            Instant expiryInstant = null;
+            if (dateExpiredObj instanceof java.time.OffsetDateTime) {
+                expiryInstant = ((java.time.OffsetDateTime) dateExpiredObj).toInstant();
+            } else if (dateExpiredObj instanceof java.sql.Timestamp) {
+                expiryInstant = ((java.sql.Timestamp) dateExpiredObj).toInstant();
+            } else if (dateExpiredObj instanceof java.time.Instant) {
+                expiryInstant = (java.time.Instant) dateExpiredObj;
+            }
+            
+            if (expiryInstant != null && expiryInstant.isBefore(java.time.Instant.now())) {
+                log.info("Solicitud de recuperación expirada para usuario: {}", userEmail);
+                return buildErrorResponse("SLYEXP");
+            }
+            
+            // 4. VALIDACIÓN DE SEGURIDAD MEJORADA
+            // 4.1 Verificar contra la contraseña ACTUAL (Soporte Híbrido: BCrypt o Legacy)
+            if (isPasswordMatch(rawPassword, currentPasswordHashInDB, username)) {
+                log.info("La nueva contraseña es igual a la actual (User: {})", username);
+                return buildErrorResponse("PSWEQS");
             }
 
-            // Validar que password no sea nulo o vacío
-            if (password == null || password.trim().isEmpty()) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("message", "PASNVD");
-                error.put("code", "");
-                error.put("request_id", null);
-                return error;
-            }
+            // 4.2 Verificar contra el HISTORIAL (Últimas 5 contraseñas en pl_reset_pass)
+            // Se asume que 'old_password' guarda el hash que tenía el usuario al momento del reset
+            String sqlHistory = "SELECT old_password FROM pl_reset_pass " +
+                                "WHERE id_user = :userId AND old_password IS NOT NULL " +
+                                "ORDER BY date_registration DESC LIMIT 5";
+            
+            @SuppressWarnings("unchecked")
+            java.util.List<String> historyHashes = entityManager.createNativeQuery(sqlHistory)
+                    .setParameter("userId", userId)
+                    .getResultList();
 
-            UUID requestId = UUID.fromString(codeReq.trim());
-            
-            // Obtener el registro de reset pass para obtener el usuario
-            com.uteq.api.entity.ResetPass resetPass = resetPassRepository.findByIdRequest(requestId).orElse(null);
-            
-            if (resetPass == null) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("message", "CRQNEX");
-                error.put("code", "");
-                error.put("request_id", null);
-                return error;
-            }
-
-            // Obtener el usuario
-            com.uteq.api.entity.User user = resetPass.getUser();
-            
-            // 1. Verificar contra la contraseña actual del usuario
-            if (passwordEncoder.matches(password.trim(), user.getPassword().trim())) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("message", "PSWEQS");
-                error.put("code", "");
-                error.put("request_id", null);
-                return error;
-            }
-
-            // 2. Obtener todas las contraseñas antiguas del historial de este usuario
-            java.util.List<com.uteq.api.entity.ResetPass> passwordHistory = resetPassRepository.findByUser(user);
-            
-            // 3. Verificar contra todas las contraseñas antiguas
-            for (com.uteq.api.entity.ResetPass historyEntry : passwordHistory) {
-                // Verificar old_password
-                if (historyEntry.getOldPassword() != null && 
-                    !historyEntry.getOldPassword().trim().isEmpty() &&
-                    passwordEncoder.matches(password.trim(), historyEntry.getOldPassword().trim())) {
-                    Map<String, Object> error = new HashMap<>();
-                    error.put("message", "PSWEQS");
-                    error.put("code", "");
-                    error.put("request_id", null);
-                    return error;
+            for (String historyHash : historyHashes) {
+                // Para el historial, asumimos validación estándar BCrypt
+                // (Si hay legacy en el historial muy antiguo, se ignora por seguridad para no bloquear falsos positivos)
+                if (historyHash != null && isBCrypt(historyHash) && passwordEncoder.matches(rawPassword, historyHash)) {
+                    log.info("La nueva contraseña coincide con una del historial reciente.");
+                    return buildErrorResponse("PSWEQS");
                 }
-                
-                // Verificar new_password (contraseñas que se establecieron anteriormente)
-                if (historyEntry.getNewPassword() != null && 
-                    !historyEntry.getNewPassword().trim().isEmpty() &&
-                    passwordEncoder.matches(password.trim(), historyEntry.getNewPassword().trim())) {
-                    Map<String, Object> error = new HashMap<>();
-                    error.put("message", "PSWEQS");
-                    error.put("code", "");
-                    error.put("request_id", null);
-                    return error;
-                }
             }
-
-            // Si pasa todas las validaciones, hashear la nueva contraseña y proceder
-            String hashedPassword = passwordEncoder.encode(password.trim());
-
-            String sql = "SELECT CAST(us_update_password_step_3(:code_req, :passwordus) AS TEXT)";
-            String jsonResult = (String) entityManager.createNativeQuery(sql)
-                    .setParameter("code_req", codeReq)
-                    .setParameter("passwordus", hashedPassword)
-                    .getSingleResult();
-
-            return objectMapper.readValue(jsonResult, Map.class);
-        } catch (IllegalArgumentException e) {
-            // Error al parsear UUID
-            Map<String, Object> error = new HashMap<>();
-            error.put("message", "CRQINV");
-            error.put("code", "UUID inválido");
-            error.put("request_id", null);
-            return error;
+            
+            // 5. Proceder al cambio
+            // Hashear la nueva contraseña
+            String newHashedPassword = passwordEncoder.encode(rawPassword);
+            
+            // Actualizar tabla reset_pass
+            String updateResetPassSql = "UPDATE pl_reset_pass " +
+                    "SET date_registration = NOW(), new_password = :newPass, used = TRUE " +
+                    "WHERE id_request = :code_req";
+            
+            entityManager.createNativeQuery(updateResetPassSql)
+                    .setParameter("newPass", newHashedPassword)
+                    .setParameter("code_req", codeUuid)
+                    .executeUpdate();
+            
+            // Actualizar tabla usuario
+            String updateUserSql = "UPDATE pl_user SET password = :newPass WHERE id_user = :user_id";
+            
+            entityManager.createNativeQuery(updateUserSql)
+                    .setParameter("newPass", newHashedPassword)
+                    .setParameter("user_id", userId)
+                    .executeUpdate();
+            
+            log.info("Contraseña actualizada exitosamente para usuario: {}", userEmail);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("codemsg", "PASUEX");
+            response.put("message", "Password updated successfully");
+            response.put("email", userEmail);
+            return response;
+            
         } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> error = new HashMap<>();
-            error.put("message", "ERROR");
-            error.put("code", e.getMessage());
-            error.put("request_id", null);
-            return error;
+            log.error("Error crítico en resetPassword: ", e);
+            return buildErrorResponse("ERRORE");
         }
+    }
+
+    /**
+     * Verifica si una contraseña plana coincide con el hash almacenado,
+     * soportando tanto BCrypt como la estrategia Legacy vía Stored Procedure.
+     */
+    private boolean isPasswordMatch(String rawPassword, String storedHash, String username) {
+        if (storedHash == null) return false;
+
+        // Estrategia 1: Es un hash BCrypt estándar
+        if (isBCrypt(storedHash)) {
+            return passwordEncoder.matches(rawPassword, storedHash);
+        }
+
+        // Estrategia 2: Es Legacy (no empieza con $2...), verificamos usando el SP de Login
+        // Si el SP retorna USRCCT usando la nueva password candidata, significa que ES IGUAL a la almacenada.
+        try {
+            String sql = "SELECT CAST(us_check_information_user_for_login(:in_username, :in_password) AS TEXT)";
+            String jsonResult = (String) entityManager.createNativeQuery(sql)
+                    .setParameter("in_username", username)
+                    .setParameter("in_password", rawPassword) // Probamos con la password plana
+                    .getSingleResult();
+            
+            JsonNode jsonNode = objectMapper.readTree(jsonResult);
+            String codemsg = jsonNode.has("codemsg") ? jsonNode.get("codemsg").asText() : "";
+
+            // Si el login es exitoso con la contraseña candidata, entonces es igual a la actual
+            return "USRCCT".equals(codemsg);
+        } catch (Exception e) {
+            log.warn("Error verificando contraseña legacy: {}", e.getMessage());
+            return false; // Ante error, asumimos que no coincide para no bloquear
+        }
+    }
+
+    /**
+     * Detecta si una cadena parece ser un hash BCrypt
+     */
+    private boolean isBCrypt(String hash) {
+        return hash != null && (hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$"));
+    }
+    
+    /**
+     * Helper para construir respuestas de error
+     */
+    private Map<String, Object> buildErrorResponse(String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("message", message);
+        error.put("code", "");
+        error.put("request_id", null);
+        return error;
     }
 
     /**

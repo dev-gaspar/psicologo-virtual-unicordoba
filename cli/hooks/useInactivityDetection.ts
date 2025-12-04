@@ -11,6 +11,20 @@ export const useInactivityDetection = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const lastActivityRef = useRef<number>(Date.now()); // Para optimizar el evento mousemove
     const [isWarning, setIsWarning] = useState(false);
+    const [hasSession, setHasSession] = useState(false);
+
+    // Verificar sesión al montar y periódicamente
+    useEffect(() => {
+        const checkSession = () => {
+            const token = localStorage.getItem("token");
+            setHasSession(!!token);
+        };
+
+        checkSession();
+        const interval = setInterval(checkSession, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Función de Logout
     const logout = useCallback(() => {
@@ -103,6 +117,10 @@ export const useInactivityDetection = () => {
     }, [startWarning]);
 
     useEffect(() => {
+        if (!hasSession) {
+            return;
+        }
+
         const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
 
         const handleActivity = () => {
@@ -136,7 +154,7 @@ export const useInactivityDetection = () => {
             });
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [isWarning, resetTimer]);
+    }, [hasSession, isWarning, resetTimer]);
 
     return null;
 };
